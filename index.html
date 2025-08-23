@@ -5,15 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Links</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q0V18RHSGQ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-Q0V18RHSGQ');
-  </script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -100,6 +91,55 @@
 
     <div id="links"></div>
   </div>
+
+  <!-- إضافة Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCO4DcLvIdCcKYAeYWEElrd5s6AAERu7vA",
+      authDomain: "profile-visits-a0116.firebaseapp.com",
+      projectId: "profile-visits-a0116",
+      storageBucket: "profile-visits-a0116.firebasestorage.app",
+      messagingSenderId: "544604513550",
+      appId: "1:544604513550:web:2eb7f45fac749e92f9235f",
+      measurementId: "G-GLXTC5V9E0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function saveVisitor() {
+      const userAgent = navigator.userAgent;
+      const time = new Date().toISOString();
+
+      let platform = "Unknown";
+      let model = "Unknown";
+      let mobile = false;
+
+      if (navigator.userAgentData) {
+        try {
+          const ua = await navigator.userAgentData.getHighEntropyValues(["platform", "model", "mobile"]);
+          platform = ua.platform || platform;
+          model = ua.model || model;
+          mobile = ua.mobile || mobile;
+        } catch (e) {
+          console.log("Client Hints not fully supported", e);
+        }
+      }
+
+      await addDoc(collection(db, "visitors"), {
+        userAgent,
+        platform,
+        model,
+        mobile,
+        time
+      });
+    }
+
+    saveVisitor();
+  </script>
 
   <script>
     const links = [
