@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Links</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
@@ -12,6 +12,10 @@
       color: white;
       text-align: center;
       padding: 40px 20px;
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .container {
@@ -62,6 +66,7 @@
       user-select: none;
       -webkit-user-drag: none;
       user-drag: none;
+      touch-action: manipulation;
     }
 
     .link-btn i {
@@ -81,6 +86,12 @@
       color: white !important;
       transform: scale(0.97);
     }
+
+    html {
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
   </style>
 </head>
 <body>
@@ -92,7 +103,6 @@
     <div id="links"></div>
   </div>
 
-  <!-- إضافة Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
     import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -147,7 +157,7 @@
       { text: "Messenger", url: "https://m.me/anouar.annabi.dz", icon: "fa-brands fa-facebook-messenger", color: "#006AFF" },
       { text: "WhatsApp", url: "https://wa.me/213799430767", icon: "fa-brands fa-whatsapp", color: "#25D366" },
       { text: "Telegram", url: "https://t.me/anouarannabi", icon: "fa-brands fa-telegram", color: "#0088cc" },
-      { text: "Call Me", url: "tel:+213541376146", icon: "fa-solid fa-phone", color: "#27ae60" },
+      { text: "Call Me", url: "tel:+213799430761", icon: "fa-solid fa-phone", color: "#27ae60" },
       { text: "Instagram", url: "https://instagram.com/anouar__annabi", icon: "fa-brands fa-instagram", color: "#E1306C" }
     ];
 
@@ -174,6 +184,25 @@
         e.preventDefault();
       }
     });
+
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    document.addEventListener('dblclick', function(event) {
+      event.preventDefault();
+    }, { passive: false });
   </script>
 </body>
 </html>
