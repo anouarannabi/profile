@@ -21,6 +21,7 @@
     .container {
       max-width: 420px;
       margin: auto;
+      position: relative;
     }
 
     .profile-pic {
@@ -48,7 +49,16 @@
       margin-bottom: 25px;
     }
 
+    .link-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      margin: 12px 0;
+    }
+
     .link-btn {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -56,15 +66,11 @@
       background: white;
       color: #2c3e50;
       padding: 15px;
-      margin: 12px 0;
       border-radius: 12px;
       font-size: 18px;
       font-weight: bold;
       transition: background 0.3s, color 0.3s, transform 0.1s;
-      -webkit-user-select: none;
-      -ms-user-select: none;
       user-select: none;
-      -webkit-user-drag: none;
       user-drag: none;
       touch-action: manipulation;
     }
@@ -72,19 +78,83 @@
     .link-btn i {
       margin-right: 10px;
       font-size: 22px;
-      -webkit-user-drag: none;
       user-drag: none;
-    }
-
-    .link-btn:hover {
-      background: white;
-      color: #2c3e50;
     }
 
     .link-btn:active {
       background: #46923c !important;
       color: white !important;
       transform: scale(0.97);
+    }
+
+    .menu-btn {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+      margin-left: 8px;
+    }
+
+    .dropdown {
+      position: absolute;
+      right: 0;
+      top: 110%;
+      background: white;
+      color: #2c3e50;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      display: none;
+      flex-direction: column;
+      min-width: 150px;
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    .dropdown button {
+      background: none;
+      border: 0;
+      text-align: left;
+      padding: 12px 14px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 15px;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dropdown button i {
+      width: 16px;
+      text-align: center;
+    }
+
+    .dropdown button:hover {
+      background: #f0f0f0;
+    }
+
+    .copy-success {
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      background: rgba(46, 204, 113, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .copy-success.show {
+      opacity: 1;
     }
 
     html {
@@ -101,6 +171,10 @@
     <div class="bio">e-commerce | Mobile Repair | Web Programming</div>
 
     <div id="links"></div>
+  </div>
+
+  <div id="copySuccess" class="copy-success">
+    <i class="fa-solid fa-check"></i>
   </div>
 
   <script type="module">
@@ -134,9 +208,7 @@
           platform = ua.platform || platform;
           model = ua.model || model;
           mobile = ua.mobile || mobile;
-        } catch (e) {
-          console.log("Client Hints not fully supported", e);
-        }
+        } catch (e) {}
       }
 
       await addDoc(collection(db, "visitors"), {
@@ -157,12 +229,98 @@
       { text: "Messenger", url: "https://m.me/anouar.annabi.dz", icon: "fa-brands fa-facebook-messenger", color: "#006AFF" },
       { text: "WhatsApp", url: "https://wa.me/213799430767", icon: "fa-brands fa-whatsapp", color: "#25D366" },
       { text: "Telegram", url: "https://t.me/anouarannabi", icon: "fa-brands fa-telegram", color: "#0088cc" },
-      { text: "Call Me", url: "tel:+213541376146", icon: "fa-solid fa-phone", color: "#27ae60" },
+      { text: "Call Me", url: "tel:+213799430761", icon: "fa-solid fa-phone", color: "#27ae60" },
       { text: "Instagram", url: "https://instagram.com/anouar__annabi", icon: "fa-brands fa-instagram", color: "#E1306C" }
     ];
 
     const container = document.getElementById("links");
+    const copySuccess = document.getElementById("copySuccess");
+
+    function showCopySuccess(x, y) {
+      copySuccess.style.left = (x - 30) + 'px';
+      copySuccess.style.top = (y - 30) + 'px';
+      copySuccess.classList.add('show');
+      
+      setTimeout(() => {
+        copySuccess.classList.remove('show');
+      }, 2000);
+    }
+
+    function showNotification(message) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Link Copied', {
+          body: message,
+          icon: 'https://raw.githubusercontent.com/anouarannabi/profile/refs/heads/main/20250822_130523.jpg'
+        });
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    }
+
+    function showQR(url) {
+      const qr = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
+      window.open(qr, "_blank");
+    }
+
+    async function sendOrCopy(url, title = '', event) {
+      const text = title ? `${title}\n${url}` : url;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ 
+            title: title || 'Share Link', 
+            text: title, 
+            url: url 
+          });
+          return;
+        } catch (err) {
+          console.log('Share cancelled or failed:', err);
+        }
+      }
+      
+      try {
+        await navigator.clipboard.writeText(url);
+        if (event) {
+          showCopySuccess(event.clientX, event.clientY);
+        }
+        showNotification("Link copied successfully!");
+      } catch (err) {
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = url;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          
+          if (successful) {
+            if (event) {
+              showCopySuccess(event.clientX, event.clientY);
+            }
+            showNotification("Link copied successfully!");
+          }
+        } catch (fallbackErr) {
+          // لا تظهر أي شيء في حالة الفشل
+        }
+      }
+    }
+
+    // طلب الإذن للإشعارات عند تحميل الصفحة
+    requestNotificationPermission();
+
     links.forEach(link => {
+      const row = document.createElement("div");
+      row.className = "link-row";
+
       const a = document.createElement("a");
       a.className = "link-btn";
       a.href = link.url;
@@ -176,7 +334,50 @@
 
       a.appendChild(icon);
       a.appendChild(document.createTextNode(" " + link.text));
-      container.appendChild(a);
+
+      const menuBtn = document.createElement("button");
+      menuBtn.className = "menu-btn";
+      menuBtn.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i>';
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "dropdown";
+      dropdown.innerHTML = `
+        <button class="share">
+          <i class="fa-solid fa-share"></i>
+          <span>Send and Copy-link</span>
+        </button>
+        <button class="qr">
+          <i class="fa-solid fa-qrcode"></i>
+          <span>Show QR</span>
+        </button>
+      `;
+
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".dropdown").forEach(d => {
+          if (d !== dropdown) d.style.display = "none";
+        });
+        dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
+      });
+
+      dropdown.querySelector(".share").onclick = async (e) => {
+        e.stopPropagation();
+        dropdown.style.display = "none";
+        await sendOrCopy(link.url, link.text, e);
+      };
+
+      dropdown.querySelector(".qr").onclick = (e) => {
+        e.stopPropagation();
+        dropdown.style.display = "none";
+        showQR(link.url);
+      };
+
+      document.addEventListener("click", () => dropdown.style.display = "none");
+
+      row.appendChild(a);
+      row.appendChild(menuBtn);
+      row.appendChild(dropdown);
+      container.appendChild(row);
     });
 
     document.addEventListener("contextmenu", function(e) {
